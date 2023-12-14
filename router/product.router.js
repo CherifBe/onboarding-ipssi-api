@@ -77,7 +77,17 @@ router.delete(
     '/:productId',
     async (req, res, next) => {
         try {
-            // CODE ICI
+            const productId = req.params.productId;
+            const sql = "DELETE FROM Products WHERE id=?";
+            db.query(sql, [productId], (err, results) => {
+                if (err) {
+                    console.log('Erreur lors de la suppression du produit');
+                    res.status(500).json({ message : err })
+                } else {
+                    res.status(200).json({ message: 'Le produit est bien supprimé.' });
+                }
+            }
+            )
         } catch (error) {
             next(error);
         }
