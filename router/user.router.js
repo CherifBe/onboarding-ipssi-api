@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const bcrypt = require('bcrypt');
 const db = require('../database/db');
+const jwt = require('jsonwebtoken');
 
 router.post('/', async (req, res, next) => {
     try {
@@ -68,7 +69,16 @@ router.post('/login', async (req, res, next) => {
             if (!isValid) {
                 res.status(409).json({ message: 'wrong email or password' });
             }
-            res.status(200).json(results);
+            res.status(200).json({
+                user: results,
+                token: jwt.sign(
+                    { userId: results[0].id.toString(), email: results[0].email },
+                    process.env.TOKEN_SECRET,
+                    {
+                        expiresIn: '10h',
+                    }
+                ),
+            });
         }
     })
 });
