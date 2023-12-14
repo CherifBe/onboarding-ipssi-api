@@ -1,8 +1,8 @@
 const express = require('express');
 require('dotenv').config();
-require('./database');
 const cors = require('cors');
 const productRouter = require('./router/product.router');
+const userRouter = require('./router/user.router');
 
 const { PORT } = process.env || 3000;
 
@@ -14,6 +14,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 app.use('/products', productRouter);
+app.use('/users', userRouter);
 
 app.get('/', (req, res, next) => {
     res.status(200).json({message: 'Bienvenue sur mon API'});

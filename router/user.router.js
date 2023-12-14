@@ -4,22 +4,24 @@ const db = require('../database/db');
 
 router.post('/', async (req, res, next) => {
     try {
-        id, name, email, hash, created_at, updated_at
-
         const { name, email, password } = req.body;
         
         if(!name || !email || !password){
             res.status(400).json({ message: 'Bad credentials' });
         }
 
-        const regCheckName = new RegExp('^[a-z_-]{3,15}$');
+        const regCheckName = new RegExp('[a-zA-Z\s]+');
         const regCheckEmail = new RegExp('[^@ \t\r\n]+@[^@ \t\r\n]+\.[^@ \t\r\n]+');
         const regCheckPassword = new RegExp('^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,}$');
 
-        if(!regCheckName.test(name) || 
-        !regCheckEmail.test(email) || 
-        !regCheckPassword.text(password)){
-            res.status(200).json({ message: 'Bad credentials' });
+        if(!regCheckName.test(name)) {
+            return res.status(400).json({ message: 'Bad credentials' });
+        }
+        if(!regCheckEmail.test(email)) {
+            return res.status(400).json({ message: 'Bad credentials' });
+        }
+        if(!regCheckPassword.test(password)){
+            return res.status(400).json({ message: 'Bad credentials' });
         }
         
         const saltRounds = 10;
@@ -27,21 +29,23 @@ router.post('/', async (req, res, next) => {
 
         const userAlreadyExist = "SELECT * FROM Users WHERE email=?";
         db.query(userAlreadyExist, [email], (err, results) => {
-            if(results){
+            if(results.length != 0){
                 res.status(400).json({ message:  'Cet email est déjà utilisé'});
-            }
-        });
-    
-        const insertUserQuery = "INSERT INTO Users(name, email, hash) VALUES(?, ?, ?)";
-    
-        db.query(insertUserQuery, [name, email, hash], (err, results) => {
-            if (err) {
-                console.log('Erreur lors de l\'ajout d\'un utilisateur');
-                res.status(500).json({ message : err })
             } else {
-                res.status(200).json(results);
+                const insertUserQuery = "INSERT INTO Users(name, email, hash) VALUES(?, ?, ?)";
+    
+                db.query(insertUserQuery, [name, email, hash], (err, results) => {
+                    if (err) {
+                        console.log('Erreur lors de l\'ajout d\'un utilisateur');
+                        res.status(500).json({ message : err })
+                    } else {
+                        res.status(200).json(results);
+                    }
+                });
             }
         });
+    
+
     } catch (error) {
         next(error);
     }
@@ -60,8 +64,7 @@ router.post('/login', async (req, res, next) => {
         if (!results) {
             res.status(409).json({ message: 'wrong email or password' });
         } else {
-            console.log(results);
-            const isValid = await bcrypt.compare(password, results.hash);
+            const isValid = await bcrypt.compare(password, results[0].hash);
             if (!isValid) {
                 res.status(409).json({ message: 'wrong email or password' });
             }

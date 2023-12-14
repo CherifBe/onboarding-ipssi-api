@@ -39,24 +39,25 @@ router.post('/', async (req, res, next) => {
     try {
         const { title, price, description } = req.body;
         
-        console.log(req.body);
         const checkProduct = "SELECT * FROM Products WHERE title=?";
         db.query(checkProduct, [title], (err, results) => {
-            if(results){
-                res.status(400).json({ message:  'Ce produit existe déjà'});
-            }
-        });
-    
-        const sql = "INSERT INTO Products(title, price, description) VALUES(?, ?, ?)";
-    
-        db.query(sql, [title, price, description], (err, results) => {
-            if (err) {
-                console.log('Erreur lors de l\'ajout d\'un produit');
-                res.status(500).json({ message : err })
+            if(results.length != 0) {
+                res.status(400).json({ message:  'Ce produit existe déjà'})
             } else {
-                res.status(200).json(results);
+                const sql = "INSERT INTO Products(title, price, description) VALUES(?, ?, ?)";
+        
+                db.query(sql, [title, price, description], async (err, results) => {
+                    if (err) {
+                        console.log('Erreur lors de l\'ajout d\'un produit');
+                        res.status(500).json({ message : err })
+                    } else {
+                        res.status(200).json(results);
+                    }
+                });
             }
-        })
+        }
+        );
+    
     } catch (error) {
         next(error);
     }
